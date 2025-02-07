@@ -13,3 +13,10 @@ const User = mongoose.model("User", userSchema);
 const Admin = mongoose.model("Admin", adminSchema);
 const Course = mongoose.model("Course", courseSchema);
 const Purchase = mongoose.model("Purchase", purchaseSchema);
+
+module.exports = {
+  User: User,
+  Admin: Admin,
+  Course: Course,
+  Purchase: Purchase,
+};
