@@ -194,13 +194,11 @@ adminRouter.post(
 );
 
 adminRouter.put(
-  "/course/:courseId",
+  "/course",
   adminMiddleware,
   upload.single("image"),
   async function (req, res) {
     try {
-      const courseId = req.params.courseId;
-
       // Handle both uploaded file and imageUrl from request body
       let imageUrl = req.body.imageUrl;
       if (req.file) {
@@ -213,31 +211,25 @@ adminRouter.put(
         price: Number(req.body.price),
       });
 
-      // Find the course and ensure it belongs to the admin
-      const course = await Course.findOne({
-        _id: courseId,
-        creatorId: req.adminId,
-      });
-
-      if (!course) {
-        return res.status(404).json({
-          message: "Course not found or unauthorized",
-        });
-      }
-
-      // Update the course
-      await Course.updateOne(
-        { _id: courseId },
+      // Create course with admin's ID as creator if it doesn't exist
+      const course = await Course.findOneAndUpdate(
+        { title, creatorId: req.adminId },
         {
-          title,
           description,
           price,
           ...(imageUrl && { imageUrl }), // Update imageUrl if provided
+        },
+        {
+          upsert: true, // Create if doesn't exist
+          new: true, // Return the updated/created document
         }
       );
 
       res.json({
-        message: "Course updated successfully",
+        message: course._id
+          ? "Course updated successfully"
+          : "Course created successfully",
+        courseId: course._id,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
